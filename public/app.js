@@ -14,7 +14,7 @@ function initMap() {
 // Custom boat icon
 const boatIcon = L.icon({
   iconUrl:
-    "https://cdn-icons-png.flaticon.com/512/88/88025.png", // simple boat icon from flaticon (you can swap later)
+    "https://cdn-icons-png.flaticon.com/512/584/584167.png", // simple boat icon from flaticon (you can swap later)
   iconSize: [32, 32],
   iconAnchor: [16, 16],
   popupAnchor: [0, -16],
