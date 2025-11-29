@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Boat Tracking Website</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Boat Tracking Dashboard</h1>
+    <p>Monitor your transmitter boat in real time.</p>
+  </header>
+
+  <main>
+    <section id="map-section">
+      <div id="map"></div>
+    </section>
+
+    <section id="info-section">
+      <div class="card">
+        <h2>Boat Status</h2>
+        <p id="status-text">Loading latest boat data...</p>
+
+        <div class="battery-row">
+          <div class="battery-card">
+            <h3>Light Battery</h3>
+            <div class="battery-percentage" id="bat1-pct">--%</div>
+          </div>
+          <div class="battery-card">
+            <h3>Transmitter Battery</h3>
+            <div class="battery-percentage" id="bat2-pct">--%</div>
+          </div>
+        </div>
+
+        <div class="meta">
+          <p><strong>Last Update:</strong> <span id="last-update">--</span></p>
+          <p><strong>Location:</strong> <span id="location-text">--</span></p>
+        </div>
+      </div>
+
+      <div class="card pending-card" id="pending-card" style="display:none;">
+        <h2>Boat Pending</h2>
+        <p>The boat is connected, but its location hasn’t been established yet.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <small>Powered by your Water Turbine System &amp; NodeMCU</small>
+  </footer>
+
+  <!-- Leaflet JS -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+
+  <script src="/app.js"></script>
+</body>
+</html>
