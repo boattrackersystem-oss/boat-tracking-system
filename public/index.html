@@ -2,10 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Boat Tracking Website</title>
+  <title>Boat Tracking Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Leaflet CSS -->
   <link
     rel="stylesheet"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -28,6 +27,10 @@
 
     <section id="info-section">
       <div class="card">
+        <div id="sos-banner" class="sos-banner" style="display:none;">
+          🚨 <strong>SOS ACTIVE!</strong> The boat is requesting immediate help.
+        </div>
+
         <h2>Boat Status</h2>
         <p id="status-text">Loading latest boat data...</p>
 
@@ -48,9 +51,28 @@
         </div>
       </div>
 
-      <div class="card pending-card" id="pending-card" style="display:none;">
-        <h2>Boat Pending</h2>
-        <p>The boat is connected, but its location hasn’t been established yet.</p>
+      <div class="card">
+        <div class="history-header">
+          <h2>Boat History</h2>
+          <button id="toggle-history-btn">Show history</button>
+        </div>
+        <div id="history-container" class="history-container" style="display:none;">
+          <table>
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Lat</th>
+                <th>Lon</th>
+                <th>Light Bat</th>
+                <th>Tx Bat</th>
+                <th>SOS</th>
+              </tr>
+            </thead>
+            <tbody id="history-body">
+              <!-- rows injected by JS -->
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
   </main>
@@ -59,7 +81,6 @@
     <small>Powered by your Water Turbine System &amp; NodeMCU</small>
   </footer>
 
-  <!-- Leaflet JS -->
   <script
     src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="

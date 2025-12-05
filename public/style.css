@@ -116,3 +116,75 @@ footer {
     height: 50vh;
   }
 }
+.sos-banner {
+  background: #b91c1c;
+  color: #fee2e2;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  animation: sosPulse 1s infinite;
+}
+
+@keyframes sosPulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.4; }
+  100% { opacity: 1; }
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.history-header h2 {
+  margin: 0;
+}
+
+#toggle-history-btn {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.8rem;
+  border-radius: 999px;
+  border: none;
+  background: #111827;
+  color: #f9fafb;
+  cursor: pointer;
+}
+
+#toggle-history-btn:hover {
+  opacity: 0.9;
+}
+
+.history-container {
+  max-height: 230px;
+  overflow-y: auto;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.history-container table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.history-container th,
+.history-container td {
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  text-align: left;
+}
+
+.history-container tr:nth-child(even) {
+  background: #f9fafb;
+}
+
+.history-container td.sos-cell.active {
+  color: #b91c1c;
+  font-weight: 700;
+}
