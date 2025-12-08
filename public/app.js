@@ -1,7 +1,13 @@
 let map;
 let boatMarker = null;
-let historyVisible = false;
 
+let historyItems = [];
+let historyVisible = false;
+let showHistoryOnMap = false;
+let historyPolyline = null;
+let historyMarkers = [];
+
+// ---------- MAP INIT ----------
 function initMap() {
   map = L.map("map").setView([7.457398, 125.772873], 12);
 
@@ -11,22 +17,22 @@ function initMap() {
   }).addTo(map);
 }
 
-// Boat icons: normal vs SOS
+// Boat icons
 const boatIconNormal = L.icon({
-  iconUrl: "/assets/boat.png", // your local boat icon
+  iconUrl: "/assets/boat.png", // your local icon
   iconSize: [48, 48],
   iconAnchor: [24, 24],
   popupAnchor: [0, -24],
 });
 
 const boatIconSos = L.icon({
-  iconUrl: "/assets/boat.png", // same icon, but we can visually distinguish via popup / banner
+  iconUrl: "/assets/boat.png",
   iconSize: [52, 52],
   iconAnchor: [26, 26],
   popupAnchor: [0, -26],
 });
 
-// ---------- UI UPDATE FOR CURRENT DATA ----------
+// ---------- CURRENT DATA UI ----------
 function updateUI(data) {
   const bat1El = document.getElementById("bat1-pct");
   const bat2El = document.getElementById("bat2-pct");
@@ -43,9 +49,11 @@ function updateUI(data) {
   bat1El.textContent = data.bat1 != null ? `${data.bat1.toFixed(1)}%` : "--%";
   bat2El.textContent = data.bat2 != null ? `${data.bat2.toFixed(1)}%` : "--%";
 
+  let lastUpdateText = "--";
   if (data.updatedAt) {
     const d = new Date(data.updatedAt);
-    lastUpdateEl.textContent = d.toLocaleString();
+    lastUpdateText = d.toLocaleString();
+    lastUpdateEl.textContent = lastUpdateText;
   } else {
     lastUpdateEl.textContent = "--";
   }
@@ -76,6 +84,9 @@ function updateUI(data) {
 
     const popupHtml = `
       <strong>Boat Status</strong><br/>
+      Last Update: ${lastUpdateText}<br/>
+      Lat: ${lat.toFixed(6)}<br/>
+      Lon: ${lon.toFixed(6)}<br/>
       Light Battery: ${data.bat1 != null ? data.bat1.toFixed(1) + "%" : "--%"}<br/>
       Transmitter Battery: ${
         data.bat2 != null ? data.bat2.toFixed(1) + "%" : "--%"
@@ -95,17 +106,17 @@ function updateUI(data) {
   }
 }
 
-// ---------- HISTORY UI ----------
+// ---------- HISTORY TABLE ----------
 function renderHistory(items) {
   const tbody = document.getElementById("history-body");
   tbody.innerHTML = "";
 
-  items.forEach((item) => {
+  items.forEach((item, index) => {
     const tr = document.createElement("tr");
+    tr.dataset.index = index;
 
     const createdAt = item.createdAt ? new Date(item.createdAt) : null;
     const timeText = createdAt ? createdAt.toLocaleString() : "--";
-
     const sosActive = item.sos === 1;
 
     tr.innerHTML = `
@@ -121,6 +132,97 @@ function renderHistory(items) {
 
     tbody.appendChild(tr);
   });
+
+  // Click on row -> focus that history point on map
+  tbody.querySelectorAll("tr").forEach((row) => {
+    row.addEventListener("click", () => {
+      const idx = parseInt(row.dataset.index, 10);
+      focusHistoryPoint(idx);
+    });
+  });
+}
+
+// ---------- HISTORY ON MAP ----------
+function clearHistoryFromMap() {
+  if (historyPolyline) {
+    map.removeLayer(historyPolyline);
+    historyPolyline = null;
+  }
+  historyMarkers.forEach((m) => {
+    if (m) map.removeLayer(m);
+  });
+  historyMarkers = [];
+}
+
+function renderHistoryOnMap() {
+  clearHistoryFromMap();
+
+  const latlngs = [];
+
+  historyItems.forEach((item, index) => {
+    if (item.lat == null || item.lon == null) return;
+
+    const latlng = [item.lat, item.lon];
+    latlngs.push(latlng);
+
+    const createdAt = item.createdAt ? new Date(item.createdAt) : null;
+    const timeText = createdAt ? createdAt.toLocaleString() : "--";
+    const sosActive = item.sos === 1;
+
+    const marker = L.circleMarker(latlng, {
+      radius: sosActive ? 6 : 4,
+      weight: 1,
+      color: sosActive ? "#b91c1c" : "#2563eb",
+      fillColor: sosActive ? "#fecaca" : "#bfdbfe",
+      fillOpacity: 0.9,
+    }).addTo(map);
+
+    marker.bindPopup(`
+      <strong>History point</strong><br/>
+      Time: ${timeText}<br/>
+      Lat: ${item.lat.toFixed(5)}<br/>
+      Lon: ${item.lon.toFixed(5)}<br/>
+      Light Bat: ${item.bat1 != null ? item.bat1.toFixed(1) + "%" : "--"}<br/>
+      Tx Bat: ${item.bat2 != null ? item.bat2.toFixed(1) + "%" : "--"}<br/>
+      SOS: ${sosActive ? "ACTIVE" : "Normal"}
+    `);
+
+    historyMarkers[index] = marker;
+  });
+
+  if (latlngs.length >= 2) {
+    historyPolyline = L.polyline(latlngs, {
+      weight: 3,
+      opacity: 0.7,
+    }).addTo(map);
+  }
+}
+
+// Focus map + popup to specific history index
+function focusHistoryPoint(index) {
+  const item = historyItems[index];
+  if (!item || item.lat == null || item.lon == null) return;
+
+  // Ensure history is visible on map
+  if (!showHistoryOnMap) {
+    showHistoryOnMap = true;
+    const toggleMapBtn = document.getElementById("toggle-history-map-btn");
+    toggleMapBtn.textContent = "Hide on map";
+    renderHistoryOnMap();
+  }
+
+  const latlng = [item.lat, item.lon];
+  map.setView(latlng, 14);
+
+  if (historyMarkers[index]) {
+    historyMarkers[index].openPopup();
+  }
+
+  // highlight row
+  const tbody = document.getElementById("history-body");
+  tbody.querySelectorAll("tr").forEach((r) => r.classList.remove("active"));
+  const row = tbody.querySelector(`tr[data-index="${index}"]`);
+  if (row) row.classList.add("active");
 }
 
 // ---------- FETCHERS ----------
@@ -140,7 +242,13 @@ async function fetchBoatHistory() {
     const res = await fetch("/api/boat/history?limit=30");
     if (!res.ok) throw new Error("Failed to fetch /api/boat/history");
     const data = await res.json();
-    renderHistory(data.items || []);
+
+    historyItems = data.items || [];
+    renderHistory(historyItems);
+
+    if (showHistoryOnMap) {
+      renderHistoryOnMap();
+    }
   } catch (err) {
     console.error(err);
   }
@@ -155,12 +263,24 @@ document.addEventListener("DOMContentLoaded", () => {
   setInterval(fetchBoatData, 5000);     // live
   setInterval(fetchBoatHistory, 15000); // history refresh
 
-  const toggleBtn = document.getElementById("toggle-history-btn");
+  const toggleListBtn = document.getElementById("toggle-history-btn");
+  const toggleMapBtn = document.getElementById("toggle-history-map-btn");
   const historyContainer = document.getElementById("history-container");
 
-  toggleBtn.addEventListener("click", () => {
+  toggleListBtn.addEventListener("click", () => {
     historyVisible = !historyVisible;
     historyContainer.style.display = historyVisible ? "block" : "none";
-    toggleBtn.textContent = historyVisible ? "Hide history" : "Show history";
+    toggleListBtn.textContent = historyVisible ? "Hide list" : "Show list";
+  });
+
+  toggleMapBtn.addEventListener("click", () => {
+    showHistoryOnMap = !showHistoryOnMap;
+    toggleMapBtn.textContent = showHistoryOnMap ? "Hide on map" : "Show on map";
+
+    if (showHistoryOnMap) {
+      renderHistoryOnMap();
+    } else {
+      clearHistoryFromMap();
+    }
   });
 });
