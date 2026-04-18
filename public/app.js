@@ -46,8 +46,37 @@ function updateUI(data) {
   const lon = data.lon;
   const sos = data.sos === 1;
 
+  const LOW_BAT_THRESHOLD = 20;
+
   bat1El.textContent = data.bat1 != null ? `${data.bat1.toFixed(1)}%` : "--%";
   bat2El.textContent = data.bat2 != null ? `${data.bat2.toFixed(1)}%` : "--%";
+
+  const bat1Low = data.bat1 != null && data.bat1 <= LOW_BAT_THRESHOLD;
+  const bat2Low = data.bat2 != null && data.bat2 <= LOW_BAT_THRESHOLD;
+
+  bat1El.closest(".battery-card").classList.toggle("battery-low", bat1Low);
+  bat2El.closest(".battery-card").classList.toggle("battery-low", bat2Low);
+
+  const bat1Warning = bat1El.closest(".battery-card").querySelector(".battery-warning");
+  const bat2Warning = bat2El.closest(".battery-card").querySelector(".battery-warning");
+
+  if (bat1Low && !bat1Warning) {
+    const warn = document.createElement("div");
+    warn.className = "battery-warning";
+    warn.textContent = "⚠ Low Battery";
+    bat1El.closest(".battery-card").appendChild(warn);
+  } else if (!bat1Low && bat1Warning) {
+    bat1Warning.remove();
+  }
+
+  if (bat2Low && !bat2Warning) {
+    const warn = document.createElement("div");
+    warn.className = "battery-warning";
+    warn.textContent = "⚠ Low Battery";
+    bat2El.closest(".battery-card").appendChild(warn);
+  } else if (!bat2Low && bat2Warning) {
+    bat2Warning.remove();
+  }
 
   let lastUpdateText = "--";
   if (data.updatedAt) {

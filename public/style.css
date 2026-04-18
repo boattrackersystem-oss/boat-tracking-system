@@ -90,6 +90,22 @@ main {
   font-weight: 700;
 }
 
+.battery-card.battery-low {
+  background: #fff3cd;
+  border: 1px solid #f59e0b;
+}
+
+.battery-card.battery-low .battery-percentage {
+  color: #b45309;
+}
+
+.battery-warning {
+  margin-top: 0.3rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #b45309;
+}
+
 .meta p {
   font-size: 0.85rem;
   margin-top: 0.25rem;
