@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Register a Boat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Register a Boat</h1>
+    <p>Assign a name and details to a tracker's serial number.</p>
+    <nav class="header-nav"><a href="/">&larr; Back to dashboard</a></nav>
+  </header>
+
+  <div id="admin-login-modal" class="modal-overlay">
+    <div class="modal-box">
+      <h2>Admin Access Required</h2>
+      <p>Log in as an admin to manage boat registrations.</p>
+      <form id="admin-login-form">
+        <label for="admin-username">Username</label>
+        <input type="text" id="admin-username" name="username" autocomplete="off" required />
+
+        <label for="admin-password">Password</label>
+        <input type="password" id="admin-password" name="password" required />
+
+        <button type="submit">Log In</button>
+        <a href="/" class="modal-cancel-link">Cancel &amp; return to dashboard</a>
+
+        <p id="admin-login-message" class="form-message"></p>
+      </form>
+    </div>
+  </div>
+
+  <main class="register-main" id="register-main" style="display:none;">
+    <section class="card register-form-card">
+      <h2>New Registration</h2>
+      <form id="register-form">
+        <label for="serial">Serial Number</label>
+        <input type="text" id="serial" name="serial" placeholder="e.g. 123" required />
+
+        <label for="name">Boat Name</label>
+        <input type="text" id="name" name="name" placeholder="e.g. KL Boat" required />
+
+        <label for="owner">Owner</label>
+        <input type="text" id="owner" name="owner" placeholder="e.g. Kenlloyd Billones" />
+
+        <label for="type">Boat Type</label>
+        <input type="text" id="type" name="type" placeholder="e.g. Fishing boat" />
+
+        <button type="submit">Register Boat</button>
+
+        <p id="form-message" class="form-message"></p>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Registered Boats</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Serial</th>
+              <th>Name</th>
+              <th>Owner</th>
+              <th>Type</th>
+              <th>Registered At</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="boats-body">
+            <!-- rows injected by JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <small>Powered by your Water Turbine System &amp; NodeMCU</small>
+  </footer>
+
+  <script src="/register.js"></script>
+</body>
+</html>

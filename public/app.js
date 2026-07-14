@@ -7,6 +7,18 @@ let showHistoryOnMap = false;
 let historyPolyline = null;
 let historyMarkers = [];
 
+let registeredBoats = [];
+let liveBoatSerial = null; // serial of the boat currently rendered on the map (if registered)
+
+let lastBoatData = null;
+let boatSelected = false; // status/battery details only show once the boat has been clicked or searched-for
+
+function selectLiveBoat() {
+  if (boatSelected) return;
+  boatSelected = true;
+  if (lastBoatData) updateUI(lastBoatData);
+}
+
 // ---------- MAP INIT ----------
 function initMap() {
   map = L.map("map").setView([7.457398, 125.772873], 12);
@@ -34,12 +46,54 @@ const boatIconSos = L.icon({
 
 // ---------- CURRENT DATA UI ----------
 function updateUI(data) {
+  const statusTextEl = document.getElementById("status-text");
+  const sosBannerEl = document.getElementById("sos-banner");
+  const unregisteredBannerEl = document.getElementById("unregistered-banner");
+  const telemetryContentEl = document.getElementById("telemetry-content");
+  const historyCardEl = document.getElementById("history-card");
+  const headerSubtitleEl = document.getElementById("header-subtitle");
+
+  const selectPromptEl = document.getElementById("select-prompt");
+
+  if (!data.registered) {
+    liveBoatSerial = null;
+    boatSelected = false;
+    unregisteredBannerEl.style.display = "block";
+    selectPromptEl.style.display = "none";
+    telemetryContentEl.style.display = "none";
+    historyCardEl.style.display = "none";
+    sosBannerEl.style.display = "none";
+    statusTextEl.style.display = "none";
+    headerSubtitleEl.textContent = "Monitor your transmitter boat in real time.";
+
+    if (boatMarker) {
+      map.removeLayer(boatMarker);
+      boatMarker = null;
+    }
+    return;
+  }
+
+  liveBoatSerial = data.serial;
+  unregisteredBannerEl.style.display = "none";
+  historyCardEl.style.display = "block";
+  headerSubtitleEl.textContent = data.name
+    ? `Monitoring: ${data.name} (Serial ${liveBoatSerial})`
+    : "Monitor your transmitter boat in real time.";
+
+  if (boatSelected) {
+    selectPromptEl.style.display = "none";
+    statusTextEl.style.display = "block";
+    telemetryContentEl.style.display = "block";
+  } else {
+    selectPromptEl.style.display = "block";
+    statusTextEl.style.display = "none";
+    telemetryContentEl.style.display = "none";
+  }
+
   const bat1El = document.getElementById("bat1-pct");
   const bat2El = document.getElementById("bat2-pct");
-  const statusTextEl = document.getElementById("status-text");
   const lastUpdateEl = document.getElementById("last-update");
   const locationTextEl = document.getElementById("location-text");
-  const sosBannerEl = document.getElementById("sos-banner");
 
   const hasLocation = !!data.hasLocation;
   const lat = data.lat;
@@ -106,6 +160,7 @@ function updateUI(data) {
         icon: sos ? boatIconSos : boatIconNormal,
       }).addTo(map);
       boatMarker.bindPopup("");
+      boatMarker.on("click", () => selectLiveBoat());
     } else {
       boatMarker.setLatLng([lat, lon]);
       boatMarker.setIcon(sos ? boatIconSos : boatIconNormal);
@@ -254,12 +309,93 @@ function focusHistoryPoint(index) {
   if (row) row.classList.add("active");
 }
 
+// ---------- BOAT SEARCH ----------
+async function fetchRegisteredBoats() {
+  try {
+    const res = await fetch("/api/boats");
+    if (!res.ok) throw new Error("Failed to fetch /api/boats");
+    const data = await res.json();
+    registeredBoats = data.boats || [];
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function renderSuggestions(matches) {
+  const suggestionsEl = document.getElementById("boat-suggestions");
+  suggestionsEl.innerHTML = "";
+
+  if (matches.length === 0) {
+    suggestionsEl.style.display = "none";
+    return;
+  }
+
+  matches.forEach((boat) => {
+    const item = document.createElement("div");
+    item.className = "boat-suggestion-item";
+    item.textContent = `${boat.name} (Serial ${boat.serial})`;
+    item.addEventListener("click", () => selectBoat(boat));
+    suggestionsEl.appendChild(item);
+  });
+
+  suggestionsEl.style.display = "block";
+}
+
+function selectBoat(boat) {
+  const searchInput = document.getElementById("boat-search");
+  const suggestionsEl = document.getElementById("boat-suggestions");
+  const searchMessageEl = document.getElementById("search-message");
+
+  searchInput.value = boat.name;
+  suggestionsEl.style.display = "none";
+  searchMessageEl.textContent = "";
+
+  if (boat.serial === liveBoatSerial && boatMarker) {
+    selectLiveBoat();
+    map.flyTo(boatMarker.getLatLng(), 15, { duration: 1.2 });
+    boatMarker.openPopup();
+  } else {
+    searchMessageEl.textContent = `No location data yet for ${boat.name}.`;
+  }
+}
+
+function initBoatSearch() {
+  const searchInput = document.getElementById("boat-search");
+  const suggestionsEl = document.getElementById("boat-suggestions");
+  const searchMessageEl = document.getElementById("search-message");
+
+  searchInput.addEventListener("input", () => {
+    searchMessageEl.textContent = "";
+    const query = searchInput.value.trim().toLowerCase();
+
+    if (!query) {
+      suggestionsEl.style.display = "none";
+      return;
+    }
+
+    const matches = registeredBoats.filter(
+      (boat) =>
+        (boat.name && boat.name.toLowerCase().includes(query)) ||
+        boat.serial.toLowerCase().includes(query)
+    );
+
+    renderSuggestions(matches);
+  });
+
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".search-bar")) {
+      suggestionsEl.style.display = "none";
+    }
+  });
+}
+
 // ---------- FETCHERS ----------
 async function fetchBoatData() {
   try {
     const res = await fetch("/api/boat");
     if (!res.ok) throw new Error("Failed to fetch /api/boat");
     const data = await res.json();
+    lastBoatData = data;
     updateUI(data);
   } catch (err) {
     console.error(err);
@@ -286,11 +422,14 @@ async function fetchBoatHistory() {
 // ---------- DOM INIT ----------
 document.addEventListener("DOMContentLoaded", () => {
   initMap();
+  initBoatSearch();
   fetchBoatData();
   fetchBoatHistory();
+  fetchRegisteredBoats();
 
-  setInterval(fetchBoatData, 5000);     // live
-  setInterval(fetchBoatHistory, 15000); // history refresh
+  setInterval(fetchBoatData, 5000);         // live
+  setInterval(fetchBoatHistory, 15000);     // history refresh
+  setInterval(fetchRegisteredBoats, 15000); // registered boats list refresh
 
   const toggleListBtn = document.getElementById("toggle-history-btn");
   const toggleMapBtn = document.getElementById("toggle-history-map-btn");

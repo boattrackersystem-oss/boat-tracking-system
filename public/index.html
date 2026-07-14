@@ -17,11 +17,17 @@
 <body>
   <header>
     <h1>Boat Tracking Dashboard</h1>
-    <p>Monitor your transmitter boat in real time.</p>
+    <p id="header-subtitle">Monitor your transmitter boat in real time.</p>
+    <nav class="header-nav"><a href="/register.html">Register a boat &rarr;</a></nav>
   </header>
 
   <main>
     <section id="map-section">
+      <div class="search-bar">
+        <input type="text" id="boat-search" placeholder="Search registered boats by name or serial..." autocomplete="off" />
+        <div id="boat-suggestions" class="boat-suggestions" style="display:none;"></div>
+        <p id="search-message" class="search-message"></p>
+      </div>
       <div id="map"></div>
     </section>
 
@@ -31,27 +37,34 @@
           🚨 <strong>SOS ACTIVE!</strong> The boat is requesting immediate help.
         </div>
 
-        <h2>Boat Status</h2>
-        <p id="status-text">Loading latest boat data...</p>
-
-        <div class="battery-row">
-          <div class="battery-card">
-            <h3>Light Battery</h3>
-            <div class="battery-percentage" id="bat1-pct">--%</div>
-          </div>
-          <div class="battery-card">
-            <h3>Transmitter Battery</h3>
-            <div class="battery-percentage" id="bat2-pct">--%</div>
-          </div>
+        <div id="unregistered-banner" class="unregistered-banner" style="display:none;">
+          1 boat is not registered yet. <a href="/register.html">Register it</a> to start monitoring.
         </div>
 
-        <div class="meta">
-          <p><strong>Last Update:</strong> <span id="last-update">--</span></p>
-          <p><strong>Location:</strong> <span id="location-text">--</span></p>
+        <h2>Boat Status</h2>
+        <p id="select-prompt" class="select-prompt" style="display:none;">Click the boat on the map, or search for it above, to view its status.</p>
+        <p id="status-text">Loading latest boat data...</p>
+
+        <div id="telemetry-content">
+          <div class="battery-row">
+            <div class="battery-card">
+              <h3>Light Battery</h3>
+              <div class="battery-percentage" id="bat1-pct">--%</div>
+            </div>
+            <div class="battery-card">
+              <h3>Transmitter Battery</h3>
+              <div class="battery-percentage" id="bat2-pct">--%</div>
+            </div>
+          </div>
+
+          <div class="meta">
+            <p><strong>Last Update:</strong> <span id="last-update">--</span></p>
+            <p><strong>Location:</strong> <span id="location-text">--</span></p>
+          </div>
         </div>
       </div>
 
-      <div class="card">
+      <div class="card" id="history-card">
         <div class="history-header">
           <h2>Boat History</h2>
           <div class="history-controls">
